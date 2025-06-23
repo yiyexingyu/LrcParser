@@ -50,7 +50,8 @@ public class LrcLyricParserTest : BaseSingleLineParserTest<LrcLyricParser, LrcLy
             {
                 Text = "帰り道は",
                 StartTimes = [17000],
-                TimeTags = TestCaseTagHelper.ParseTimeTags(["[1,start]:1000", "[2,start]:2000", "[3,start]:3000", "[3,end]:4000"]),
+                // [0,start]:17000 is created from the line time tag
+                TimeTags = TestCaseTagHelper.ParseTimeTags(["[0,start]:17000", "[1,start]:1000", "[2,start]:2000", "[3,start]:3000", "[3,end]:4000"]),
             },
         ],
         [

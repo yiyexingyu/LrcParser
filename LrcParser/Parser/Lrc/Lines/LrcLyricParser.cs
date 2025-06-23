@@ -36,7 +36,7 @@ public class LrcLyricParser : SingleLineParser<LrcLyric>
             };
         }
 
-        var (lyric, timeTags) = LrcTimedTextUtils.TimedTextToObject(rawLyric);
+        var (lyric, timeTags) = LrcTimedTextUtils.TimedTextToObject(rawLyric, startTimes[0]);
 
         return new LrcLyric
         {
