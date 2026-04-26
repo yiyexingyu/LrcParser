@@ -37,7 +37,7 @@ public static class LrcStartTimeUtils
         // get all matched startTime
         MatchCollection matches = TimeTagUtils.LINE_TIME_TAG_REGEX.Matches(line);
 
-        var startTimes = matches.Select(x => TimeTagUtils.ConvertTimeTagToMilliseconds(x.Value, LineTimeTag)).ToArray();
+        var startTimes = matches.OfType<Match>().Select(x => TimeTagUtils.ConvertTimeTagToMilliseconds(x.Value, LineTimeTag)).ToArray();
         var lyric = TimeTagUtils.LINE_TIME_TAG_REGEX.Replace(line, "").Trim();
 
         return new Tuple<int[], string>(startTimes, lyric);
@@ -58,7 +58,7 @@ public static class LrcStartTimeUtils
         if (startTimes.Any() == false)
             throw new InvalidOperationException("Missing one or more start times.");
 
-        if (TimeTagUtils.LINE_TIME_TAG_REGEX.Matches(text).Any())
+        if (TimeTagUtils.LINE_TIME_TAG_REGEX.Matches(text).OfType<Match>().Any() == false)
             throw new InvalidOperationException("lyric should not contain any line time tags.");
 
         if (startTimes.Length == 0)

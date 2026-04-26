@@ -78,7 +78,7 @@ public abstract class LyricParser
             return parser?.Encode(x, index) ?? "";
         }).ToList();
 
-        return string.Join('\n', lines);
+        return string.Join("\n", lines);
     }
 
     protected abstract IEnumerable<object> PreProcess(Song song);

@@ -762,13 +762,13 @@ public class KarParserTest : BaseLyricParserTest<KarParser>
 
     private void checkDecode(string[] lrcTexts, Song song)
     {
-        var actual = Decode(string.Join('\n', lrcTexts));
+        var actual = Decode(string.Join("\n", lrcTexts));
         AreEqual(song, actual);
     }
 
     private void checkEncode(Song song, string[] lrcTexts)
     {
-        var expected = string.Join('\n', lrcTexts);
+        var expected = string.Join("\n", lrcTexts);
         var actual = Encode(song);
         Assert.That(actual, Is.EqualTo(expected));
     }

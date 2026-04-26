@@ -48,7 +48,18 @@ public readonly struct TextIndex : IComparable<TextIndex>, IEquatable<TextIndex>
 
     public override int GetHashCode()
     {
+#if NETSTANDARD2_1
         return HashCode.Combine(Index, State);
+#else
+        int hash = 17;
+
+        unchecked
+        {
+            hash = hash * 23 + Index.GetHashCode();
+            hash += State.GetHashCode();
+            return hash;
+        }
+#endif
     }
 
     public static bool operator ==(TextIndex index1, TextIndex index2) => index1.Equals(index2);

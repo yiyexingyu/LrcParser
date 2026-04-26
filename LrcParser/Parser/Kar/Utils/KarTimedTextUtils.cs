@@ -24,14 +24,14 @@ internal static class KarTimedTextUtils
         var text = string.Empty;
         var timeTags = new SortedDictionary<TextIndex, int>();
 
-        foreach (var match in matchTimeTags.ToArray())
+        foreach (Match match in matchTimeTags)
         {
-            var endIndex = match.Index;
+            int endIndex = match.Index;
 
             if (startIndex < endIndex)
             {
                 // add the text.
-                text += timedText[startIndex..endIndex];
+                text += timedText.Substring(startIndex, endIndex - startIndex);
             }
 
             // update the new start for next time-tag calculation.
@@ -46,11 +46,17 @@ internal static class KarTimedTextUtils
             var time = TimeTagUtils.TimeTagToMillionSecond(match.Value);
 
             // using try add because it might be possible with duplicated time-tag position in the lyric.
-            timeTags.TryAdd(new TextIndex(textIndex, state), time);
+
+            var key = new TextIndex(textIndex, state);
+
+            if (!timeTags.ContainsKey(key))
+            {
+                timeTags.Add(key, time);
+            }
         }
 
         // should add remaining text at the right of the end time-tag.
-        text += timedText[startIndex..endTextIndex];
+        text += timedText.Substring(startIndex, endTextIndex - startIndex);
 
         return new Tuple<string, SortedDictionary<TextIndex, int>>(text, timeTags);
     }
@@ -61,10 +67,10 @@ internal static class KarTimedTextUtils
 
         var timedText = text;
 
-        foreach (var (textIndex, time) in timeTags)
+        foreach (var tag in timeTags)
         {
-            var timeTagString = TimeTagUtils.MillionSecondToTimeTag(time);
-            var stringIndex = TextIndexUtils.ToGapIndex(textIndex);
+            var timeTagString = TimeTagUtils.MillionSecondToTimeTag(tag.Value);
+            var stringIndex = TextIndexUtils.ToGapIndex(tag.Key);
             timedText = timedText.Insert(insertIndex + stringIndex, timeTagString);
 
             insertIndex += timeTagString.Length;

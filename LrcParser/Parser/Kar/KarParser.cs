@@ -56,9 +56,9 @@ public class KarParser : LyricParser, IHasParserConfig<KarEncodeConfig, KarDecod
 
                 var matches = new Regex(rubyTag.Parent).Matches(text);
 
-                foreach (var match in matches.ToArray())
+                foreach (Match match in matches)
                 {
-                    var startLyricCharIndex = match.Index;
+                    int startLyricCharIndex = match.Index;
                     var endLyricCharIndex = startLyricCharIndex + match.Length - 1;
 
                     var startTimeTag = timeTags.Reverse().LastOrDefault(x => x.Key >= new TextIndex(startLyricCharIndex));
@@ -116,6 +116,7 @@ public class KarParser : LyricParser, IHasParserConfig<KarEncodeConfig, KarDecod
         // first, should return the time-tag first.
         foreach (var lyric in lyrics)
         {
+            // ReSharper disable once HeapView.BoxingAllocation
             yield return new KarLyric
             {
                 Text = lyric.Text,
@@ -184,7 +185,7 @@ public class KarParser : LyricParser, IHasParserConfig<KarEncodeConfig, KarDecod
                 yield return new KarRuby
                 {
                     Ruby = rubyTag.Text,
-                    Parent = lyric.Text[startLyricCharIndex..(endLyricCharIndex + 1)],
+                    Parent = lyric.Text.Substring(startLyricCharIndex, (endLyricCharIndex + 1) - startLyricCharIndex),
                     TimeTags = getTimeTags(rubyTag.TimeTags, -startTimeTag.Value ?? 0),
                     StartTime = startTimeTag.Value,
                     EndTime = endTimeTag.Value,
@@ -214,7 +215,11 @@ public class KarParser : LyricParser, IHasParserConfig<KarEncodeConfig, KarDecod
 
         public override int GetHashCode()
         {
+#if NETSTANDARD2_1
             return HashCode.Combine(Ruby);
+#else
+            return Ruby?.GetHashCode() ?? 0;
+#endif
         }
     }
 }

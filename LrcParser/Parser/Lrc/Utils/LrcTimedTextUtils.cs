@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Text;
+using System.Text.RegularExpressions;
 using LrcParser.Model;
 using LrcParser.Utils;
 using static LrcParser.Parser.Lrc.Utils.TimeTagMode;
@@ -40,12 +41,12 @@ internal static class LrcTimedTextUtils
         var insertSpace = false;
         var lastTagWasStartTag = false;
 
-        foreach (var match in timeTagMatches.ToArray())
+        foreach (Match match in timeTagMatches)
         {
             // Segment ends at the start of the next time tag
-            var segmentEndIndex = match.Index;
+            int segmentEndIndex = match.Index;
 
-            var segment = timedText[segmentStartIndex..segmentEndIndex];
+            var segment = timedText.Substring(segmentStartIndex, segmentEndIndex - segmentEndIndex);
 
             // Update next start index
             segmentStartIndex = segmentEndIndex + match.Length;
@@ -55,7 +56,11 @@ internal static class LrcTimedTextUtils
                 // The last segment was a start tag, and the next segment is empty, insert end tag
                 if (lastTagWasStartTag)
                 {
-                    timeTags.TryAdd(new TextIndex(lyricText.Length - 1, IndexState.End), lastTimeTag);
+                    var textIndex = new TextIndex(lyricText.Length - 1, IndexState.End);
+
+                    if (!timeTags.ContainsKey(textIndex))
+                        timeTags.Add(textIndex, lastTimeTag);
+
                     lastTagWasStartTag = false;
                 }
 
@@ -75,7 +80,9 @@ internal static class LrcTimedTextUtils
             }
 
             // Add start time tag for next lyric
-            timeTags.TryAdd(new TextIndex(lyricText.Length), lastTimeTag);
+            var index = new TextIndex(lyricText.Length);
+            if (!timeTags.ContainsKey(index))
+                timeTags.Add(index, lastTimeTag);
             lastTagWasStartTag = true;
 
             // Append lyric segment without surrounding whitespace
@@ -86,10 +93,10 @@ internal static class LrcTimedTextUtils
 
             // Reset insertSpace flag after adding a segment,
             // and instead track whether this new segment ends with whitespace
-            insertSpace = char.IsWhiteSpace(segment[^1]);
+            insertSpace = char.IsWhiteSpace(segment[segment.Length - 1]);
         }
 
-        var remaining = timedText[segmentStartIndex..textLength];
+        var remaining = timedText.Substring(segmentStartIndex, textLength - segmentStartIndex);
 
         if (!string.IsNullOrWhiteSpace(remaining))
         {
@@ -100,13 +107,17 @@ internal static class LrcTimedTextUtils
             }
 
             // Add remaining text with start time tag
-            timeTags.TryAdd(new TextIndex(lyricText.Length), lastTimeTag);
+            var textIndex = new TextIndex(lyricText.Length);
+            if (!timeTags.ContainsKey(textIndex))
+                timeTags.Add(textIndex, lastTimeTag);
             lyricText.Append(remaining.Trim());
         }
         else
         {
             // No remaining text, last time tag was end tag
-            timeTags.TryAdd(new TextIndex(lyricText.Length - 1, IndexState.End), lastTimeTag);
+            var textIndex = new TextIndex(lyricText.Length - 1, IndexState.End);
+            if (!timeTags.ContainsKey(textIndex))
+                timeTags.Add(textIndex, lastTimeTag);
         }
 
         return new Tuple<string, SortedDictionary<TextIndex, int>>(lyricText.ToString(), timeTags);
@@ -118,10 +129,10 @@ internal static class LrcTimedTextUtils
 
         var timedText = text;
 
-        foreach (var (textIndex, time) in timeTags)
+        foreach (var tag in timeTags)
         {
-            var timeTagString = TimeTagUtils.ConvertMillisecondsToTimeTag(time, WordTimeTag);
-            var stringIndex = TextIndexUtils.ToGapIndex(textIndex);
+            var timeTagString = TimeTagUtils.ConvertMillisecondsToTimeTag(tag.Value, WordTimeTag);
+            var stringIndex = TextIndexUtils.ToGapIndex(tag.Key);
             timedText = timedText.Insert(insertIndex + stringIndex, timeTagString);
 
             insertIndex += timeTagString.Length;
