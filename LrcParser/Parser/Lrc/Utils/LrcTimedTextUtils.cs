@@ -46,7 +46,7 @@ internal static class LrcTimedTextUtils
             // Segment ends at the start of the next time tag
             int segmentEndIndex = match.Index;
 
-            var segment = timedText.Substring(segmentStartIndex, segmentEndIndex - segmentEndIndex);
+            var segment = timedText.Substring(segmentStartIndex, segmentEndIndex - segmentStartIndex);
 
             // Update next start index
             segmentStartIndex = segmentEndIndex + match.Length;
